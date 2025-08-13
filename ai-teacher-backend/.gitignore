@@ -3,3 +3,6 @@
 
 # Ignore node dependencies
 node_modules/
+
+/ai-teacher-backend/node_modules
+*.env
