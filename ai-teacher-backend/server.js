@@ -1,24 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ----- STATIC WELCOME MESSAGE -----
-const WELCOME_MESSAGE = `
-**Welcome!** This is the experimental AI Teacher.
-We currently have **only Module 1: "React E-commerce: How It Loads".**
-`;
-
+// ----- SYSTEM MESSAGE FOR MODULE 1 -----
 const systemMessages = [
   {
     role: "system",
     content: `
-👋 **Welcome!** This is the experimental AI Teacher.
+👋 You are the **AI Teacher**.
 We currently have **only Module 1: "React E-commerce: How It Loads".**
 
 In Module 1, we cover:
@@ -44,19 +40,14 @@ app.post("/ai-teacher/chat", async (req, res) => {
   try {
     const { messages } = req.body;
 
-    // FIRST CONTACT → Return static welcome without hitting OpenAI
-    if (!messages || messages.length === 0) {
-      return res.json({ reply: WELCOME_MESSAGE });
-    }
-
-    // OTHERWISE → Call OpenAI with system + user/assistant history
+    // Always call OpenAI now (no special welcome case)
     const finalMessages = [...systemMessages, ...messages];
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
@@ -74,7 +65,7 @@ app.post("/ai-teacher/chat", async (req, res) => {
 
     res.json({ reply: data.choices[0].message.content });
   } catch (err) {
-    console.error(err);
+    console.error("Chat error:", err);
     res.status(500).json({ error: err.message });
   }
 });
