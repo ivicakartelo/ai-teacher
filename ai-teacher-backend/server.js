@@ -39,6 +39,10 @@ In Module 1, we cover:
 app.post("/ai-teacher/chat", async (req, res) => {
   try {
     const { messages } = req.body;
+    //console.log(messages); // -> { messages: [...] } as JS object
+    //console.log(req.body)
+    //console.log(req.body.messages)
+    //console.log(req)
 
     // Always call OpenAI now (no special welcome case)
     const finalMessages = [...systemMessages, ...messages];
@@ -58,12 +62,15 @@ app.post("/ai-teacher/chat", async (req, res) => {
     });
 
     const data = await response.json();
+    //console.log(data);
 
     if (!data.choices || !data.choices[0]?.message?.content) {
       throw new Error("No reply from OpenAI API");
     }
 
     res.json({ reply: data.choices[0].message.content });
+    console.log(data);
+    
   } catch (err) {
     console.error("Chat error:", err);
     res.status(500).json({ error: err.message });

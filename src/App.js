@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./App.css";
 
 function App() {
+  console.log("App rendered");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,9 @@ function App() {
 
     const newMessages = [...messages, { role: "user", content: input }];
     setMessages(newMessages);
+    console.log(newMessages);
+    console.log(messages); // still has old messages
+    console.log(input);
     setInput("");
     setLoading(true);
 
@@ -22,12 +26,17 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }) // 👈 send history
       });
-
+      //console.log(res)
       const data = await res.json();
+      console.log(data);
+      console.log(messages);
+      
       setMessages([
         ...newMessages,
         { role: "assistant", content: data.reply }
       ]);
+      console.log(messages);
+      console.log(newMessages);
     } catch (err) {
       console.error(err);
     } finally {
