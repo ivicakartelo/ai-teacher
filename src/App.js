@@ -14,9 +14,6 @@ function App() {
 
     const newMessages = [...messages, { role: "user", content: input }];
     setMessages(newMessages);
-    console.log(newMessages);
-    console.log(messages); // still has old messages
-    console.log(input);
     setInput("");
     setLoading(true);
 
@@ -26,17 +23,12 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }) // 👈 send history
       });
-      //console.log(res)
       const data = await res.json();
-      console.log(data);
-      console.log(messages);
       
       setMessages([
         ...newMessages,
         { role: "assistant", content: data.reply }
       ]);
-      console.log(messages);
-      console.log(newMessages);
     } catch (err) {
       console.error(err);
     } finally {
@@ -46,13 +38,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <h2 className="app-title">💡 AI Teacher - Module 1</h2>
+      <h2 className="app-title">💡 AI Teacher </h2>
 
       {/* --- STATIC WELCOME LABEL (not part of chat) --- */}
       <div className="welcome-box">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {`**Welcome!** This is the experimental AI Teacher.
-We currently have **only Module 1: "React E-commerce: How It Loads".**`}
+We currently have **only Module 1: "React E-commerce: How It Loads" and Module 2: "States And Props**`}
         </ReactMarkdown>
       </div>
 

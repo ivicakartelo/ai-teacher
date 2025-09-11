@@ -9,43 +9,73 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ----- SYSTEM MESSAGE FOR MODULE 1 -----
-const systemMessages = [
-  {
-    role: "system",
-    content: `
-👋 You are the **AI Teacher**.
-We currently have **only Module 1: "React E-commerce: How It Loads".**
+// ----- TEACHING RULES -----
+const teachingRules = `
+📚 Teaching rules:
+- Teach in small chunks, wait for "go on"
+- Each chunk = 2–3 steps or concepts + exercise
+- Show short code snippets only
+- End each section with: "Can you explain this in your own words?"
+`;
 
-In Module 1, we cover:
+// ----- MODULES OBJECT -----
+const modules = {
+  1: {
+    title: "React E-commerce: How It Loads",
+    content: `
 1. **How a website loads** in the browser.
 2. The loading sequence of **index.html → index.js → App.js** in React.
 3. **DOM readiness** and why JavaScript must wait for HTML.
+`,
+    rules: `${teachingRules}\n- - Stay inside Module 2 unless student asks about another module OR asks about 'what next' or 'other modules'.`
+  },
+  2: {
+    title: "React State and Props",
+    content: `
+Every component is like object in OOP. It has variables and methods. 
+Here we calls variable state. Later on the example you will see state and methodes. 
 
-📚 **TEACHING RULES**:
-- Always stay **inside Module 1**.  
-- If the learner asks about something else, say:
-  "We will cover that in later modules."
-- Teach in **small chunks** and wait for the learner to say "go on" before moving forward.
-- Each chunk = 2–3 steps or concepts + a question/exercise.
-- Show only short, relevant code snippets.
-- For big files, say: "See file in repo".
-- End each section with: "Can you explain this in your own words?"
-`
+Every component can has props, short from properties. 
+Architecture of React app is kaskading components. 
+That cascade is created from parent and child components. 
+Data flow is posible only down from parent to chiled. 
+It is realise that state of parent be props of child.
+`,
+    rules: `${teachingRules}\n- - Stay inside Module 2 unless student asks about another module OR asks about 'what next' or 'other modules'.`
   }
-];
+};
 
 // ----- CHAT ENDPOINT -----
 app.post("/ai-teacher/chat", async (req, res) => {
   try {
     const { messages } = req.body;
-    //console.log(messages); // -> { messages: [...] } as JS object
-    //console.log(req.body)
-    //console.log(req.body.messages)
-    //console.log(req)
 
-    // Always call OpenAI now (no special welcome case)
-    const finalMessages = [...systemMessages, ...messages];
+    // Build strict system content
+    const systemContent = `
+👋 You are the **AI Teacher**.
+
+IMPORTANT RULES:
+- Use ONLY the module texts provided below.
+- DO NOT invent, rephrase, or expand explanations.
+- Copy text directly from the module content.
+- If the learner asks about something outside the modules, reply: "We will cover that in later modules."
+
+${Object.values(modules)
+  .map(
+    (mod) => `
+MODULE: "${mod.title}"
+${mod.content}
+
+${mod.rules}
+`
+  )
+  .join("\n\n")}
+`;
+
+    const finalMessages = [
+      { role: "system", content: systemContent },
+      ...messages
+    ];
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -57,20 +87,18 @@ app.post("/ai-teacher/chat", async (req, res) => {
         model: "gpt-4o-mini",
         messages: finalMessages,
         max_tokens: 300,
-        temperature: 0.7
+        temperature: 0 // 👈 zero temperature = no creativity, no hallucination
       })
     });
 
     const data = await response.json();
-    //console.log(data);
 
     if (!data.choices || !data.choices[0]?.message?.content) {
       throw new Error("No reply from OpenAI API");
     }
 
     res.json({ reply: data.choices[0].message.content });
-    console.log(data);
-    
+
   } catch (err) {
     console.error("Chat error:", err);
     res.status(500).json({ error: err.message });
